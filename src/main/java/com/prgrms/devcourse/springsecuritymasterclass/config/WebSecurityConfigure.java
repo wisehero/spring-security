@@ -32,10 +32,10 @@ public class WebSecurityConfigure extends WebSecurityConfigurerAdapter {
                 .tokenValiditySeconds(300)
                 .and()
                 .logout()// 로그아웃 설정
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))// logout()의 디폴트
                 .logoutSuccessUrl("/")
-                .invalidateHttpSession(true)
-                .clearAuthentication(true)
+                .invalidateHttpSession(true)// logout()의 디폴트
+                .clearAuthentication(true)// logout()의 디폴트
                 .and() // HTTP 요청을 HTTPS 요청으로 리다이렉트
                 .requiresChannel()
                 .anyRequest().requiresSecure();
