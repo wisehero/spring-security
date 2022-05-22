@@ -25,11 +25,11 @@ spring:
       minimum-idle: 1
       maximum-pool-size: 5
       pool-name: H2_DB
-    sql:
-      init:
-        platform: h2
-        schema-locations: classpath:sql/schema_new.sql
-        data-locations: classpath:sql/data_new.sql
-        encoding: UTF-8
+  sql:
+    init:
+      platform: h2
+      schema-locations: classpath:sql/schema.sql
+      data-locations: classpath:sql/data.sql
+      encoding: UTF-8
 server:
   port: 8080
