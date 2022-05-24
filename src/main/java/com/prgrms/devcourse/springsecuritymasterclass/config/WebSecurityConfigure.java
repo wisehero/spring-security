@@ -1,16 +1,24 @@
 package com.prgrms.devcourse.springsecuritymasterclass.config;
 
+import com.prgrms.devcourse.springsecuritymasterclass.user.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import javax.sql.DataSource;
+import javax.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -18,10 +26,11 @@ public class WebSecurityConfigure extends WebSecurityConfigurerAdapter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final DataSource dataSource;
+    private UserService userService;
 
-    public WebSecurityConfigure(DataSource dataSource) {
-        this.dataSource = dataSource;
+    @Autowired
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 
     @Override // WebSecurity 클래스는 필터 체인 관련 전역 설정을 처리할 수 있는 API 제공
@@ -29,18 +38,36 @@ public class WebSecurityConfigure extends WebSecurityConfigurerAdapter {
         web.ignoring().antMatchers("/assets/**", "/h2-console/**");
     }
 
+    @Bean
+    public AccessDeniedHandler accessDeniedHandler() {
+        return (request, response, e) -> {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            Object principal = authentication != null ? authentication.getPrincipal() : null;
+            log.warn("{} is denied", principal, e);
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.setContentType("text/plain;charset=UTF-8");
+            response.getWriter().write("ACCESS DENIED");
+            response.getWriter().flush();
+            response.getWriter().close();
+        };
+    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 .antMatchers("/me")
                 .hasAnyRole("USER", "ADMIN")
-                .anyRequest().
-                permitAll()
+                .anyRequest()
+                .permitAll()
                 .and()
                 .formLogin()
                 .defaultSuccessUrl("/")
-                .permitAll().and()
-                .rememberMe().rememberMeParameter("remember-me")
+                .permitAll()
+                .and()
+                .httpBasic()
+                .and()
+                .rememberMe()
+                .rememberMeParameter("remember-me")
                 .tokenValiditySeconds(300)
                 .and()
                 .logout()// 로그아웃 설정
@@ -48,16 +75,18 @@ public class WebSecurityConfigure extends WebSecurityConfigurerAdapter {
                 .logoutSuccessUrl("/")
                 .invalidateHttpSession(true)// logout()의 디폴트
                 .clearAuthentication(true)// logout()의 디폴트
-                .and() // HTTP 요청을 HTTPS 요청으로 리다이렉트
-                .requiresChannel()
-                .anyRequest().requiresSecure();
+                .and()
+                .exceptionHandling()
+                .accessDeniedHandler(accessDeniedHandler());
     }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.inMemoryAuthentication()
-                .withUser("user").password("{noop}user123").roles("USER")
-                .and()
-                .withUser("admin").password("{noop}admin123").roles("ADMIN");
+        auth.userDetailsService(userService);
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
