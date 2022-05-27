@@ -1,5 +1,6 @@
 package com.prgrms.devcourse.springsecuritymasterclass.config;
 
+import com.prgrms.devcourse.springsecuritymasterclass.jwt.Jwt;
 import com.prgrms.devcourse.springsecuritymasterclass.user.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -26,11 +26,18 @@ public class WebSecurityConfigure extends WebSecurityConfigurerAdapter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private JwtConfigure jwtConfigure;
+
     private UserService userService;
 
     @Autowired
     public void setUserService(UserService userService) {
         this.userService = userService;
+    }
+
+    @Autowired
+    public void setJwtConfigure(JwtConfigure jwtConfigure) {
+        this.jwtConfigure = jwtConfigure;
     }
 
     @Override // WebSecurity 클래스는 필터 체인 관련 전역 설정을 처리할 수 있는 API 제공
@@ -52,6 +59,20 @@ public class WebSecurityConfigure extends WebSecurityConfigurerAdapter {
         };
     }
 
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public Jwt jwt() {
+        return new Jwt(
+                jwtConfigure.getIssuer(),
+                jwtConfigure.getClientSecret(),
+                jwtConfigure.getExpirySeconds()
+        );
+    }
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
@@ -61,21 +82,13 @@ public class WebSecurityConfigure extends WebSecurityConfigurerAdapter {
                 .permitAll()
                 .and()
                 .formLogin()
-                .defaultSuccessUrl("/")
-                .permitAll()
-                .and()
+                .disable()
                 .httpBasic()
-                .and()
+                .disable()
                 .rememberMe()
-                .rememberMeParameter("remember-me")
-                .tokenValiditySeconds(300)
-                .and()
+                .disable()
                 .logout()// 로그아웃 설정
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout"))// logout()의 디폴트
-                .logoutSuccessUrl("/")
-                .invalidateHttpSession(true)// logout()의 디폴트
-                .clearAuthentication(true)// logout()의 디폴트
-                .and()
+                .disable()
                 .exceptionHandling()
                 .accessDeniedHandler(accessDeniedHandler());
     }
@@ -83,10 +96,5 @@ public class WebSecurityConfigure extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userService);
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 }

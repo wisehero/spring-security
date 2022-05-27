@@ -1,13 +1,6 @@
 spring:
   application:
     name: spring security
-  thymeleaf:
-    cache: true
-  security:
-    user:
-      name: user
-      password: user123
-      roles: USER
   messages:
     basename: i18n/messages
     encoding: UTF-8
@@ -16,10 +9,6 @@ spring:
     console:
       enabled: true
       path: /h2-console
-  session:
-    store-type: jdbc
-    jdbc:
-      initialize-schema: never
   datasource:
     driver-class-name: org.h2.Driver
     url: "jdbc:h2:file:./database/spring_security.db;MODE=MYSQL;DB_CLOSE_DELAY=-1"
@@ -32,7 +21,7 @@ spring:
   sql:
     init:
       platform: h2
-      schema-locations: classpath:sql/schema_new.sql, classpath:org/springframework/session/jdbc/schema-h2.sql
+      schema-locations: classpath:sql/schema_new.sql
       data-locations: classpath:sql/data_new.sql
       encoding: UTF-8
       mode: always
@@ -50,3 +39,9 @@ spring:
         dialect: org.hibernate.dialect.H2Dialect
 server:
   port: 8080
+
+jwt:
+  header: token
+  issuer: prgrms
+  client-secret: EENY5W0eegTf1naQB2eDeyCLl5kRS2b8xa5c4qLdS0hmVjtbvo8tOyhPMcAmtPuQ
+  expiry-seconds: 60
