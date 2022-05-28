@@ -1,5 +1,7 @@
 package com.prgrms.devcourse.springsecuritymasterclass.user;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import javax.persistence.*;
 
 @Entity
@@ -44,5 +46,11 @@ public class User {
                 ", passwd='" + passwd + '\'' +
                 ", group=" + group +
                 '}';
+    }
+
+    public void checkPassword(PasswordEncoder passwordEncoder, String credentials) {
+        if (!passwordEncoder.matches(credentials, passwd)) {
+            throw new IllegalArgumentException("Bad credentials");
+        }
     }
 }

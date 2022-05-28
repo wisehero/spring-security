@@ -1,12 +1,15 @@
 package com.prgrms.devcourse.springsecuritymasterclass.config;
 
 import com.prgrms.devcourse.springsecuritymasterclass.jwt.Jwt;
+import com.prgrms.devcourse.springsecuritymasterclass.jwt.JwtAuthenticationFilter;
+import com.prgrms.devcourse.springsecuritymasterclass.jwt.JwtAuthenticationProvider;
 import com.prgrms.devcourse.springsecuritymasterclass.user.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -66,35 +69,28 @@ public class WebSecurityConfigure extends WebSecurityConfigurerAdapter {
 
     @Bean
     public Jwt jwt() {
-        return new Jwt(
-                jwtConfigure.getIssuer(),
-                jwtConfigure.getClientSecret(),
-                jwtConfigure.getExpirySeconds()
-        );
+        return new Jwt(jwtConfigure.getIssuer(), jwtConfigure.getClientSecret(), jwtConfigure.getExpirySeconds());
+    }
+
+    @Bean
+    @Override
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }
+
+    @Autowired
+    public void configureAuthentication(AuthenticationManagerBuilder builder, JwtAuthenticationProvider authenticationProvider) {
+        builder.authenticationProvider(authenticationProvider);
+    }
+
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        Jwt jwt = getApplicationContext().getBean(Jwt.class);
+        return new JwtAuthenticationFilter(jwt, jwtConfigure.getHeader());
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http.authorizeRequests()
-                .antMatchers("/me")
-                .hasAnyRole("USER", "ADMIN")
-                .anyRequest()
-                .permitAll()
-                .and()
-                .formLogin()
-                .disable()
-                .httpBasic()
-                .disable()
-                .rememberMe()
-                .disable()
-                .logout()// 로그아웃 설정
-                .disable()
-                .exceptionHandling()
-                .accessDeniedHandler(accessDeniedHandler());
-    }
-
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userService);
+        http.authorizeRequests().antMatchers("/me").hasAnyRole("USER", "ADMIN").anyRequest().permitAll().and().formLogin().disable().httpBasic().disable().rememberMe().disable().logout()// 로그아웃 설정
+                .disable().exceptionHandling().accessDeniedHandler(accessDeniedHandler());
     }
 }
