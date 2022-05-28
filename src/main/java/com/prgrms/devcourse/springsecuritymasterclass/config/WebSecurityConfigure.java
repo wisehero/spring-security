@@ -2,15 +2,11 @@ package com.prgrms.devcourse.springsecuritymasterclass.config;
 
 import com.prgrms.devcourse.springsecuritymasterclass.jwt.Jwt;
 import com.prgrms.devcourse.springsecuritymasterclass.jwt.JwtAuthenticationFilter;
-import com.prgrms.devcourse.springsecuritymasterclass.jwt.JwtAuthenticationProvider;
-import com.prgrms.devcourse.springsecuritymasterclass.user.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -29,17 +25,9 @@ public class WebSecurityConfigure extends WebSecurityConfigurerAdapter {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private JwtConfigure jwtConfigure;
+    private final JwtConfigure jwtConfigure;
 
-    private UserService userService;
-
-    @Autowired
-    public void setUserService(UserService userService) {
-        this.userService = userService;
-    }
-
-    @Autowired
-    public void setJwtConfigure(JwtConfigure jwtConfigure) {
+    public WebSecurityConfigure(JwtConfigure jwtConfigure) {
         this.jwtConfigure = jwtConfigure;
     }
 
@@ -76,11 +64,6 @@ public class WebSecurityConfigure extends WebSecurityConfigurerAdapter {
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
-    }
-
-    @Autowired
-    public void configureAuthentication(AuthenticationManagerBuilder builder, JwtAuthenticationProvider authenticationProvider) {
-        builder.authenticationProvider(authenticationProvider);
     }
 
     public JwtAuthenticationFilter jwtAuthenticationFilter() {

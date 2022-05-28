@@ -37,6 +37,26 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-name: kakao
+            client-id: 6735bfee258437d9fff6e81e787742e0
+            client-secret: x2GbClMF8KcCSoEbkuVRi16cAkpRfi0e
+            scope: profile_nickname, profile_image
+            redirect-uri: "http://localhost:8080/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-authentication-method: POST
+        provider:
+          kakao:
+              authorization-uri: https://kauth.kakao.com/oauth/authorize
+              token-uri: https://kauth.kakao.com/oauth/token
+              user-info-uri: https://kapi.kakao.com/v2/user/me
+              user-name-attribute: id
+
+
 server:
   port: 8080
 
